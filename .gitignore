@@ -1,0 +1,28 @@
+# Environment — NEVER commit real secrets
+.env
+!.env.example
+
+# Java / Maven / Gradle
+target/
+build/
+*.class
+*.jar
+*.war
+.gradle/
+*.iml
+.idea/
+*.DS_Store
+
+# Node / React
+node_modules/
+frontend/build/
+frontend/dist/
+.env.local
+.env.production
+
+# Docker volumes (if mounted locally)
+docker/volumes/
+
+# OS
+.DS_Store
+Thumbs.db

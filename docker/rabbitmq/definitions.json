@@ -1,0 +1,92 @@
+{
+  "vhosts": [
+    { "name": "binary_magic" }
+  ],
+  "exchanges": [
+    {
+      "name": "auth.events",
+      "vhost": "binary_magic",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "game.events",
+      "vhost": "binary_magic",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "dead.letter",
+      "vhost": "binary_magic",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "queues": [
+    {
+      "name": "analytics.auth.events",
+      "vhost": "binary_magic",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "dead.letter",
+        "x-dead-letter-routing-key": "analytics.auth.events.dead"
+      }
+    },
+    {
+      "name": "analytics.game.events",
+      "vhost": "binary_magic",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "dead.letter",
+        "x-dead-letter-routing-key": "analytics.game.events.dead"
+      }
+    },
+    {
+      "name": "analytics.auth.events.dead",
+      "vhost": "binary_magic",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "analytics.game.events.dead",
+      "vhost": "binary_magic",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "bindings": [
+    {
+      "source": "auth.events",
+      "vhost": "binary_magic",
+      "destination": "analytics.auth.events",
+      "destination_type": "queue",
+      "routing_key": "auth.#"
+    },
+    {
+      "source": "game.events",
+      "vhost": "binary_magic",
+      "destination": "analytics.game.events",
+      "destination_type": "queue",
+      "routing_key": "game.#"
+    },
+    {
+      "source": "dead.letter",
+      "vhost": "binary_magic",
+      "destination": "analytics.auth.events.dead",
+      "destination_type": "queue",
+      "routing_key": "analytics.auth.events.dead"
+    },
+    {
+      "source": "dead.letter",
+      "vhost": "binary_magic",
+      "destination": "analytics.game.events.dead",
+      "destination_type": "queue",
+      "routing_key": "analytics.game.events.dead"
+    }
+  ]
+}
