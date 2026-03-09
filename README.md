@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# binary-magic
-=======
 # 🎩 Binary Magic Trick API
 
 A production-grade microservices backend for a binary number magic trick — built with Java 21, Spring Boot 3, Redis, RabbitMQ, PostgreSQL, and React.
@@ -85,4 +82,3 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch strategy and commit conventi
 ## Deployment
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for free-tier deployment guide (Railway + Vercel).
->>>>>>> e0cc914 (chore(infra): init monorepo with docker-compose and project structure)
