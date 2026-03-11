@@ -5,42 +5,75 @@ A production-grade microservices backend for a binary number magic trick — bui
 ## Architecture
 
 ```
-Client (Browser / Mobile)
-        │
-        ▼ HTTPS / WSS
-   API Gateway :8080     ← JWT validation, rate limiting
-        │
-   ┌────┴────┬──────────────┐
-   ▼         ▼              ▼
-Auth :8081  Game :8082   Analytics :8083
-   │         │              │
-   └────┬────┘              │
-        ▼                   ▼
-     Redis              PostgreSQL
-     RabbitMQ ──────────────┘
+Client (Browser)
+       │
+       ▼ HTTP
+  API Gateway :8080        ← JWT validation, routes via Eureka
+       │
+  ┌────┴────┬──────────────┐
+  ▼         ▼              ▼
+Auth :8081  Game :8082  Analytics :8083
+            │              │
+            ▼              ▼
+          Redis         PostgreSQL
+            │
+         RabbitMQ ──────► Analytics
 ```
+
+---
 
 ## Services
 
-| Service          | Port | Responsibility                              |
-|------------------|------|---------------------------------------------|
-| api-gateway      | 8080 | Single ingress, JWT check, rate limit        |
-| auth-service     | 8081 | Register, login, JWT issue, token refresh    |
-| game-service     | 8082 | Binary cards logic, WebSocket sessions       |
-| analytics-service| 8083 | Async event consumer, stats persistence      |
-| frontend         | 3000 | React UI                                    |
+| Service           | Port | Responsibility                                      |
+|-------------------|------|-----------------------------------------------------|
+| eureka-server     | 8761 | Service registry — all services register here       |
+| api-gateway       | 8080 | Single entry point, JWT validation, Eureka routing  |
+| auth-service      | 8081 | Issues anonymous JWT sessions (login coming later)  |
+| game-service      | 8082 | Binary card logic, game state in Redis, REST API    |
+| analytics-service | 8083 | Async RabbitMQ consumer, persists stats to Postgres |
+| frontend          | 3000 | React UI                                            |
+
+---
+
+## Game Flow
+
+```
+1. Get a session token (once)
+   POST /api/auth/token
+   ← { token, sessionId, expiresIn }
+
+2. Start a game
+   POST /api/game/session
+   Authorization: Bearer <token>
+   ← { sessionId, cardIndex: 0, numbers: [1,3,5,7,9,11...] }
+
+3. Answer each card (repeat 6 times)
+   POST /api/game/session/{id}/answer
+   Authorization: Bearer <token>
+   Body: { "answer": true }
+   ← { cardIndex: 1, numbers: [2,3,6,7,10,11...] }   ← next card
+   ← { result: 42 }                                   ← after 6th answer
+```
+
+---
 
 ## Stack
 
-- **Backend**: Java 21 + Spring Boot 3
-- **Gateway**: Spring Cloud Gateway
-- **Auth**: Spring Security + JJWT
-- **Game**: Spring WebFlux (reactive WebSocket)
-- **Queue**: RabbitMQ (topic exchange + DLQ)
-- **Cache**: Redis (rate limit, JWT blacklist, game state)
-- **Database**: PostgreSQL 16
-- **Frontend**: React + TypeScript
-- **Container**: Docker + Docker Compose
+| Layer       | Technology                          |
+|-------------|-------------------------------------|
+| Language    | Java 21                             |
+| Framework   | Spring Boot 3.2                     |
+| Gateway     | Spring Cloud Gateway + Eureka       |
+| Auth        | JJWT 0.12 (anonymous sessions)      |
+| Game        | Spring MVC + Spring Data Redis      |
+| Messaging   | RabbitMQ (topic exchange + DLQ)     |
+| Cache/State | Redis                               |
+| Database    | PostgreSQL 16 (analytics only)      |
+| Frontend    | React + TypeScript                  |
+| Container   | Docker + Docker Compose             |
+| CI          | GitHub Actions                      |
+
+---
 
 ## Quick Start
 
@@ -55,30 +88,90 @@ cd binary-magic
 
 # Create your local .env from the template
 cp .env.example .env
-
-# Edit .env and set real passwords + generate JWT secret:
-# openssl rand -hex 64
+# Open .env and fill in values
+# Generate a JWT secret:
+openssl rand -hex 64
 ```
 
-### 2. Start everything
+### 3. Start infrastructure
+
 ```bash
-docker compose up --build
+docker compose up postgres redis rabbitmq
 ```
 
-### 3. Access
-| Service           | URL                          |
-|-------------------|------------------------------|
-| Frontend          | http://localhost:3000        |
-| API Gateway       | http://localhost:8080        |
-| RabbitMQ UI       | http://localhost:15672       |
-| Auth Service      | http://localhost:8081/actuator/health |
-| Game Service      | http://localhost:8082/actuator/health |
-| Analytics Service | http://localhost:8083/actuator/health |
+### 4. Start services (one terminal each)
 
-## Development Workflow
+```bash
+# Terminal 1
+cd eureka-server && mvn spring-boot:run
+
+# Terminal 2
+cd auth-service && mvn spring-boot:run
+
+# Terminal 3
+cd api-gateway && mvn spring-boot:run
+
+# Terminal 4
+cd game-service && mvn spring-boot:run
+
+# Terminal 5
+cd analytics-service && mvn spring-boot:run
+```
+
+### 5. Try it
+
+```bash
+# Get a token
+curl -X POST http://localhost:8080/api/auth/token
+
+# Start a game (paste your token)
+curl -X POST http://localhost:8080/api/game/session \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+## Service URLs
+
+| Service         | Port | Path                    |
+|-----------------|------|-------------------------|
+| API Gateway     | 8080 | /actuator/health        |
+| Auth Service    | 8081 | /actuator/health        |
+| Game Service    | 8082 | /actuator/health        |
+| Analytics       | 8083 | /actuator/health        |
+| Eureka Dashboard| 8761 | /                        |
+| RabbitMQ UI     | 15672| /                        |
+
+---
+
+## Project Structure
+
+```
+binary-magic/
+├── eureka-server/          ← Service registry
+├── api-gateway/            ← JWT validation + routing
+├── auth-service/           ← Token issuance
+├── game-service/           ← Game logic + REST API
+├── analytics-service/      ← Event consumer + stats
+├── frontend/               ← React app
+├── docker/
+│   ├── postgres/init.sql   ← DB schema
+│   └── rabbitmq/           ← Exchange + queue definitions
+├── docker-compose.yml
+└── .env.example
+```
+
+---
+
+## What's Coming
+
+- [ ] Full login / registration (Auth Service expansion)
+- [ ] WebSocket live game mode
+- [ ] Deployment guide (Railway + Vercel)
+- [ ] Frontend UI
+
+---
+
+## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch strategy and commit conventions.
-
-## Deployment
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for free-tier deployment guide (Railway + Vercel).
