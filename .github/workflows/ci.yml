@@ -40,6 +40,10 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Build Eureka Server
+        working-directory: ./eureka-server
+        run: mvn clean verify -B
+        
       - name: Build Auth Service
         working-directory: ./auth-service
         run: mvn clean verify -B
