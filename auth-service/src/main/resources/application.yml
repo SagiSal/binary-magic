@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: auth-service
+  # No DB, no Redis — this service is stateless
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+server:
+  port: 8081
+
+jwt:
+  secret: ${JWT_SECRET}
+  anonymous-ttl-hours: ${JWT_ANONYMOUS_TTL_HOURS:24}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    com.binarymagic: DEBUG
