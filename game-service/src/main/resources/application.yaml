@@ -1,8 +1,44 @@
+server:
+  port: 8082
+
 spring:
   application:
     name: game-service
+  
+  # Redis — game state storage
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}  
 
+  # RabbitMQ — event publishing
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+
+# Eureka registration
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+# Game configuration
+game:
+  session:
+    ttl-minutes: 30
+  rabbit:
+    exchange: game.events
+    routing-key:
+      completed: game.session.completed
+      abandoned: game.session.abandoned
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
