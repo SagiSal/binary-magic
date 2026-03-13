@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.binarymagic.game_service.dto.AnswerRequest;
 import com.binarymagic.game_service.dto.StartGameResponse;
 import com.binarymagic.game_service.service.GameService;
-import com.rabbitmq.client.RpcClient.Response;
 
 @RestController
 @RequestMapping("/api/game")
