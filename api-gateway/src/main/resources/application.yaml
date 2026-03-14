@@ -1,34 +1,27 @@
+spring:
+  application:
+    name: api-gateway
 server:
   port: 8080
 
 spring:
   application:
     name: api-gateway
-
-  data:
-    redis:
-      host: ${REDIS_HOST:redis}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
-
   cloud:
     gateway:
-      mvc:
-        routes:
-          - id: auth-service
-            uri: lb://AUTH-SERVICE
-            predicates:
-              - Path=/api/auth/**
-
-          - id: game-service
-            uri: lb://GAME-SERVICE
-            predicates:
-              - Path=/api/game/**
-
-          - id: analytics-service
-            uri: lb://ANALYTICS-SERVICE
-            predicates:
-              - Path=/api/analytics/**
+      routes:
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/**
+        - id: game-service
+          uri: lb://GAME-SERVICE
+          predicates:
+            - Path=/api/game/**
+        - id: analytics-service
+          uri: lb://ANALYTICS-SERVICE
+          predicates:
+            - Path=/api/analytics/**
 
 eureka:
   client:
@@ -37,11 +30,8 @@ eureka:
   instance:
     prefer-ip-address: true
 
-jwt:
-  secret: this-is-a-secret-key-for-jwt-signing
-
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,gateway
