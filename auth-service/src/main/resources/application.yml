@@ -11,13 +11,13 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
 
 server:
   port: 8081
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: change_me_generate_a_real_secret_with_openssl_rand_hex_64
   anonymous-ttl-hours: ${JWT_ANONYMOUS_TTL_HOURS:24}
 
 management:

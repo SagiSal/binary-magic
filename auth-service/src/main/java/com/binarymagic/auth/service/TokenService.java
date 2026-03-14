@@ -21,11 +21,6 @@ public class TokenService {
 
     private final JwtService jwtService;
 
-    public TokenService() {
-        // Default constructor for testing
-        this.jwtService = null;
-    }
-
     public TokenService(JwtService jwtService) {
         this.jwtService = jwtService;
     }
