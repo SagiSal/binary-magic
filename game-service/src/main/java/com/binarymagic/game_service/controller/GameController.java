@@ -23,7 +23,7 @@ public class GameController {
      */
     @PostMapping("/session")
     public ResponseEntity<StartGameResponse> startGame(
-            @RequestHeader("X-session-Id") String playerSessionId) {     
+            @RequestHeader(value = "X-Session-Id", required = false, defaultValue = "anonymous") String playerSessionId) {     
         
         StartGameResponse response = gameService.startGame(playerSessionId);
         return ResponseEntity.ok(response);
@@ -38,7 +38,7 @@ public class GameController {
     @PostMapping("/session/{gameSessionId}/answer")
     public ResponseEntity<Object> submitAnswer(
             @PathVariable String gameSessionId,
-            @RequestHeader("X-Session-Id") String playerSessionId,
+            @RequestHeader(value = "X-Session-Id", required = false, defaultValue = "anonymous") String playerSessionId,
             @RequestBody AnswerRequest request) {
 
         Object response = gameService.submitAnswer(gameSessionId, playerSessionId, request.isAnswer());
