@@ -7,18 +7,19 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: auth-service
-          uri: lb://AUTH-SERVICE
-          predicates:
-            - Path=/api/auth/**
-        - id: game-service
-          uri: lb://GAME-SERVICE
-          predicates:
-            - Path=/api/game/**
-        - id: analytics-service
-          uri: lb://ANALYTICS-SERVICE
-          predicates:
-            - Path=/api/analytics/**
+        mvc:
+          - id: auth-service
+            uri: lb://AUTH-SERVICE
+            predicates:
+              - Path=/api/auth/**
+          - id: game-service
+            uri: lb://GAME-SERVICE
+            predicates:
+              - Path=/api/game/**
+          - id: analytics-service
+            uri: lb://ANALYTICS-SERVICE
+            predicates:
+              - Path=/api/analytics/**
 
 eureka:
   client:
